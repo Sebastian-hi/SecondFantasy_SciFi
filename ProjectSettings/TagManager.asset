@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Floor
   - Head
+  - Bortic
+  - Shootable
   layers:
   - Default
   - TransparentFX
@@ -14,8 +16,8 @@ TagManager:
   - Water
   - UI
   - Floor
-  - 
-  - 
+  - Bortic
+  - Shootable
   - 
   - 
   - 

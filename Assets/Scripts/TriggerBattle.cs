@@ -20,6 +20,12 @@ public class TriggerBattle : MonoBehaviour
             {
                 _isStarted = true;
 
+                if (!Managers.Battle.UseUltraPower)
+                {
+                    Managers.Audio.StopMusic();
+                    Managers.Audio.PlayRandomFightMusic();
+                }
+                
                 foreach (var point in points)
                 {
                     GameObject enemy = Instantiate(enemyPrefab, point.position, point.rotation);
@@ -28,5 +34,12 @@ public class TriggerBattle : MonoBehaviour
                 }  
             }
         }
+    }
+    private IEnumerator PlayTriggerMusic()
+    {
+        Managers.Audio.StopMusic();
+        Managers.Audio.PlayRandomFightMusic();
+        yield return new WaitForSeconds(67f);
+        Managers.Audio.ambientSource.Play();
     }
 }

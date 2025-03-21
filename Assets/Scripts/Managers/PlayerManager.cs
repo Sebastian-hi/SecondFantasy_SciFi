@@ -19,18 +19,22 @@ public class PlayerManager : MonoBehaviour, IGameManager
 
     public int MaxAmmo { get; private set; }        // в начале 20
 
-    private Animator _animator;
-
     public bool isShieldItem { get;  set; }
 
     public bool isAmmoItem { get;  set; }
 
+    public Transform playerTransform;
+
+    public bool PlayerIsDead = false;
+
     public void Startup()
     {
         Debug.Log("Player manager starting");
-        _animator = GetComponent<Animator>();
 
         Respawn();
+
+        playerTransform = GameObject.FindWithTag("Player").transform;
+
         status = ManagerStatus.Started;
     }
 
@@ -83,7 +87,6 @@ public class PlayerManager : MonoBehaviour, IGameManager
             Shield = 0;
 
             Debug.Log("ўит прорван, јйзек is dead.");
-            _animator.SetBool("DeadPlayer", true);
 
             Messenger.Broadcast(GameEvent.LEVEL_FAILED);
         }
@@ -118,5 +121,10 @@ public class PlayerManager : MonoBehaviour, IGameManager
     {
         MaxAmmo += value;
         Messenger.Broadcast(GameEvent.AMMO_UPDATED);
+    }
+
+    public void UseUltraDamageMinCoin()
+    {
+        ECoin = 0;
     }
 }

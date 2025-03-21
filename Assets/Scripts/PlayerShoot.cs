@@ -1,7 +1,10 @@
 using Cinemachine;
 using System.Collections;
+using Unity.Burst.CompilerServices;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SocialPlatforms;
 
 public class PlayerShoot : MonoBehaviour
 { 
@@ -26,7 +29,7 @@ public class PlayerShoot : MonoBehaviour
 
     private bool _isReloading = false;
 
-    private GameObject hitColiiderObject;
+    private GameObject _hitObject;
 
     private int _damage = 50;
     private int _heatshotDamage = 100;
@@ -53,47 +56,50 @@ public class PlayerShoot : MonoBehaviour
 
     private void Update()
     {
-        if (_cameraTransform != null)
+        if (!Managers.Player.PlayerIsDead)
         {
-            Vector3 lookDirectionPlayer = _cameraTransform.forward;// направление камеры
-            lookDirectionPlayer.y = 0; // убираем наклон вверх-вниз
-            transform.forward = Vector3.Lerp(transform.forward, lookDirectionPlayer, Time.deltaTime * 10f); // плавно поворачивает игрока к прицелу
+            if (_cameraTransform != null)
+            {
+                Vector3 lookDirectionPlayer = _cameraTransform.forward;// направление камеры
+                lookDirectionPlayer.y = 0; // убираем наклон вверх-вниз
+                transform.forward = Vector3.Lerp(transform.forward, lookDirectionPlayer, Time.deltaTime * 10f); // плавно поворачивает игрока к прицелу
+            }
+
+            bool newAimingState = Input.GetMouseButton(1);
+
+
+            if (!_isReloading && _isAiming != newAimingState)
+            {
+                _isAiming = newAimingState;
+                _animator.SetBool("Aiming", _isAiming);
+                StartCoroutine(ChangeFOV(_isAiming ? 30f : 50f));
+
+            }
+
+            if (Input.GetMouseButtonDown(0) && !_isShooting && !_isReloading)
+            {
+                StartCoroutine(PlayerStartShoot());
+                RayCastFire();
+            }
+
+
+            if (Input.GetKeyDown(KeyCode.R) && !_isReloading)
+            {
+                StartCoroutine(PlayerReloading());
+            }
+
+            if (Managers.Player.CurAmmo <= 0 && !_isReloading)
+            {
+                StartCoroutine(PlayerReloading());
+            }
+
+
+            if (Managers.Battle.haveUltraPower && Input.GetKey(KeyCode.Q))
+            {
+                Managers.Player.UseUltraDamageMinCoin();
+                StartCoroutine(StartUltraDamage());
+            }
         }
-
-        bool newAimingState = Input.GetMouseButton(1);
-        
-
-        if (!_isReloading && _isAiming != newAimingState)
-        {
-            _isAiming = newAimingState;
-            _animator.SetBool("Aiming", _isAiming);
-            StartCoroutine(ChangeFOV(_isAiming ? 30f : 50f));
-
-        }
-
-        if (Input.GetMouseButtonDown(0) && !_isShooting && !_isReloading)
-        {
-            StartCoroutine(PlayerStartShoot());
-            RayCastFire();
-        }
-
-
-        if (Input.GetKeyDown(KeyCode.R) && !_isReloading) 
-        {
-            StartCoroutine(PlayerReloading());
-        }
-
-        if (Managers.Player.CurAmmo <= 0 && !_isReloading)
-        {
-            StartCoroutine(PlayerReloading());
-        }
-
-        
-        if (Managers.Battle.haveUltraPower && Input.GetKey(KeyCode.Q) )
-        {
-            StartCoroutine(StartUltraDamage());
-        }
-        
     }
 
     private IEnumerator PlayerStartShoot()
@@ -146,39 +152,83 @@ public class PlayerShoot : MonoBehaviour
 
     private void RayCastFire()
     {
-        Vector3 point = new(_cam.pixelWidth/2, _cam.pixelHeight/2, 0);
+        Vector3 point = new(_cam.pixelWidth / 2, _cam.pixelHeight / 2, 0);
         Ray ray = _cam.ScreenPointToRay(point);
         RaycastHit hit;
 
-        int layerMask = ~LayerMask.GetMask("Player", "Ignore Raycast"); // игнор этого тэга
+        int layerMask = ~LayerMask.GetMask("Player", "Ignore Raycast", "Bortic"); // игнор этого тэга
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Collide))
         {
-            hitColiiderObject = hit.collider.gameObject;
+            _hitObject = hit.collider.gameObject;
 
-            Debug.Log("Hit object: " + hitColiiderObject.name); // Проверка, что именно попадание
+            Debug.Log("Hit object: " + _hitObject.name); // Проверка, что именно попадание
 
-            StartCoroutine(StartExplosion(hit.point));
+            float distancefromCamera = Vector3.Distance(_cam.transform.position, hit.point);
+            float distanceFromHero = Vector3.Distance(transform.position, hit.point);
 
-            IEnemyInterface target = hitColiiderObject.GetComponentInParent<IEnemyInterface>();
-
-            if (target != null)
+            if (distancefromCamera < distanceFromHero)
             {
-                Debug.Log("Hit enemy!"); // Отладка, попали ли мы в врага
+                Debug.Log("Камере что-то мешает");
+                int originalLayer = _hitObject.layer;
+                _hitObject.layer = LayerMask.NameToLayer("Ignore Raycast");
 
-                if (hitColiiderObject.CompareTag("Head") || hitColiiderObject.name == "Head") // hitObject.name == headcollider";
+                RaycastHit SecondHit;
+
+                if (Physics.Raycast(ray, out SecondHit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Collide))
                 {
-                    target.HurtEnemy(_heatshotDamage);
+                    GameObject secondHitObject = SecondHit.collider.gameObject;
+
+                    Debug.Log("Второй объект: " + secondHitObject);
+
+                    StartCoroutine(StartExplosion(SecondHit.point));
+
+                    IEnemyInterface Secondtarget = _hitObject.GetComponentInParent<IEnemyInterface>();
+
+                    if (Secondtarget != null)
+                    {
+                        Debug.Log("Hit enemy!"); // Отладка, попали ли мы в врага
+
+                        if (_hitObject.CompareTag("Head") || _hitObject.name == "Head") // hitObject.name == headcollider";
+                        {
+                            Secondtarget.HurtEnemy(_heatshotDamage);
+                        }
+                        else
+                        {
+                            Secondtarget.HurtEnemy(_damage);
+                        }
+                    }
+                    _hitObject.layer = originalLayer;
                 }
-                else
+            }
+            else
+            {
+                StartCoroutine(StartExplosion(hit.point));
+
+                IEnemyInterface target = _hitObject.GetComponentInParent<IEnemyInterface>();
+
+                if (target != null)
                 {
-                    target.HurtEnemy(_damage);
+                    Debug.Log("Hit enemy!"); // Отладка, попали ли мы в врага
+
+                    if (_hitObject.CompareTag("Head") || _hitObject.name == "Head") // hitObject.name == headcollider";
+                    {
+                        target.HurtEnemy(_heatshotDamage);
+                    }
+                    else
+                    {
+                        target.HurtEnemy(_damage);
+                    }
                 }
             }
         }
+        else
+        {
+            Debug.Log("Луч не попал в цель.");
+            StartCoroutine(StartExplosion(ray.origin + ray.direction * 50)); // Взрыв в точке далеко от камеры
+        }
     }
-
-    private IEnumerator StartExplosion(Vector3 position)
+        private IEnumerator StartExplosion(Vector3 position)
     {
         GameObject explosion = Instantiate(_explosionShootPlayer, position, Quaternion.identity); // Quaternion.identity - без вращения (поворот 0 по всем осям)
         yield return new WaitForSeconds(1f);
@@ -205,6 +255,7 @@ public class PlayerShoot : MonoBehaviour
     {
         Debug.Log("Супер сила началась");
         Managers.Battle.haveUltraPower = false;
+        Managers.Battle.UseUltraPower = true;
 
         Managers.Audio.StopMusic();
         Managers.Audio.UltraPowerSource.Play();
@@ -213,15 +264,18 @@ public class PlayerShoot : MonoBehaviour
         _heatshotDamage = _ultraDamage;
         _animator.speed = 2;
         _playerMovement.MoveSpeed += 3f;
+        Managers.Player.ChangeShield(100);
 
         yield return new WaitForSeconds(15f);
         Managers.Audio.UltraPowerSource.Stop();
-        Managers.Audio.ambientSource.Play();
-
+        Managers.Battle.UseUltraPower = false;
         _damage = 50;
         _heatshotDamage = 100;
         _animator.speed = 1;
         _playerMovement.MoveSpeed -= 3f;
+
+        yield return new WaitForSeconds(2f);
+        Managers.Audio.ambientSource.Play();
 
         Debug.Log("Супер сила закончилась");
 

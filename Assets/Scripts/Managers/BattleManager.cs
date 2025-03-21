@@ -7,9 +7,8 @@ public class BattleManager : MonoBehaviour, IGameManager
 {
     public ManagerStatus status { get; private set; }
 
-    public bool battleStart = false;
-
     public bool haveUltraPower = false;
+    public bool UseUltraPower = false;
 
     public void Startup()
     {

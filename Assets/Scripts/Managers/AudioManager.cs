@@ -7,6 +7,8 @@ public class AudioManager : MonoBehaviour, IGameManager
     public AudioSource playOneShotSource;
     public AudioSource ambientSource;
     public AudioSource allMoneyCollected;
+    public AudioSource levelFailedSource;
+
     [Space]
     public AudioSource fight1MusicSource;
     public AudioSource fight2MusicSource;
@@ -50,9 +52,11 @@ public class AudioManager : MonoBehaviour, IGameManager
         {
             _musicVolume = value;
             fight1MusicSource.volume = _musicVolume;
+            fight2MusicSource.volume= _musicVolume;
             ambientSource.volume = _musicVolume;
             allMoneyCollected.volume = _musicVolume;
             UltraPowerSource.volume = _musicVolume;
+            levelFailedSource.volume = _musicVolume;
         }
     }
     
@@ -72,9 +76,11 @@ public class AudioManager : MonoBehaviour, IGameManager
             if (fight1MusicSource != null)
             {
                 fight1MusicSource.mute = value;
+                fight2MusicSource.mute = value;
                 ambientSource.mute = value;
                 allMoneyCollected.mute = value;
                 UltraPowerSource.mute = value;
+                levelFailedSource.mute = value;
             }
         }
 
@@ -83,8 +89,20 @@ public class AudioManager : MonoBehaviour, IGameManager
     public void StopMusic()
     {
         fight1MusicSource.Stop();
+        fight2MusicSource.Stop();
         ambientSource.Stop();
         allMoneyCollected.Stop();
         UltraPowerSource.Stop();
+        levelFailedSource.Stop();
+    }
+
+    public void PlayRandomFightMusic()
+    {
+        int randomMusic = Random.Range(0, 2); // 0 или 1.
+            
+        if (randomMusic == 0) 
+            fight1MusicSource.Play();
+        
+        else fight2MusicSource.Play();
     }
 }

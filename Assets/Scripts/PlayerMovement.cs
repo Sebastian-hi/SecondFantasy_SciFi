@@ -31,6 +31,8 @@ public class PlayerMovement : MonoBehaviour
     private bool _isUsingJetpack = false;
     [NonSerialized] public bool jetpackActivated = false;
 
+    private bool _playerAlreadyDead = false;
+
     private void Awake()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -47,22 +49,33 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        if (!IsShooting)
+        if (Managers.Player.Shield == 0 && !_playerAlreadyDead)
         {
-            Movement();
-            AnimationMovement();
-        }
-        if (Input.GetKey(KeyCode.Space) && !jetpackActivated)
-        {
-            StartCoroutine(StartJetpack());
-        }
-        if (Input.GetKeyUp(KeyCode.Space))
-        {
-            StopCoroutine(StartJetpack());
-            _isUsingJetpack = false;
-            jetpackActivated = false;
+            _animator.SetBool("DeadPlayer", true);
+            Managers.Player.PlayerIsDead = true;
+            _playerAlreadyDead = true;
+
+            StartCoroutine(DisableAnimator());
         }
 
+        if (!Managers.Player.PlayerIsDead)
+        {
+            if (!IsShooting)
+            {
+                Movement();
+                AnimationMovement();
+            }
+            if (Input.GetKey(KeyCode.Space) && !jetpackActivated)
+            {
+                StartCoroutine(StartJetpack());
+            }
+            if (Input.GetKeyUp(KeyCode.Space))
+            {
+                StopCoroutine(StartJetpack());
+                _isUsingJetpack = false;
+                jetpackActivated = false;
+            }
+        }
     }
 
     private void Movement()
@@ -159,5 +172,13 @@ public class PlayerMovement : MonoBehaviour
         {
             jetpackActivated = false;
         }
+    }
+
+    private IEnumerator DisableAnimator()
+    {
+        yield return new WaitForSeconds(2.8f); // чтобы доиграла анимация
+        _animator.enabled = false;
+        transform.position = transform.position;
+        transform.rotation = transform.rotation;
     }
 }

@@ -15,6 +15,7 @@ public class UIController : MonoBehaviour
     [SerializeField] private GameObject _levelFailedLabel;
     [SerializeField] private GameObject _allCoinsCollected;
     [SerializeField] private GameObject _UltraDamageLabel;
+    [SerializeField] private GameObject _UltraDamageLabel2;
     [Space]
     [Space]
     [SerializeField] private GameObject _mainCam;
@@ -32,6 +33,8 @@ public class UIController : MonoBehaviour
     [Space]
     [SerializeField] private GameObject _levelCompleteLabel;
     [SerializeField] private GameObject _GameComplete;
+
+    private bool _isWarningActive = false;
 
 
     private void OnEnable()
@@ -66,6 +69,7 @@ public class UIController : MonoBehaviour
         _plusShield.SetActive(false);
         _plusAmmo.SetActive(false);
         _UltraDamageLabel.SetActive(false);
+        _UltraDamageLabel2.SetActive(false);
         _allCoinsCollected.SetActive(false);
         _levelFailedLabel.SetActive(false);
         _BackGroundHUD1.SetActive(true);
@@ -78,21 +82,62 @@ public class UIController : MonoBehaviour
     {
         OnAmmoUpdated();
 
-        if (Managers.Battle.haveUltraPower) 
-            _UltraDamageLabel.SetActive(true);
-        else 
-            _UltraDamageLabel.SetActive(false);
+        CheckUltraPower();
 
-        CheckMinShield();
-    }
-
-    private void CheckMinShield()
-    {
-        if (Managers.Player.Shield < 50)
-             _DangerMinShield.SetActive(true);
+        if (Managers.Player.Shield < 100 && Managers.Player.Shield > 0)
+        {
+            if (!_isWarningActive)
+            {
+                StartCoroutine(CheckMinShield());
+            }
+        }
         else 
+        { 
             _DangerMinShield.SetActive(false);
+            _isWarningActive = false;
+        }
+
+        if (Managers.Battle.UseUltraPower)
+        {
+            OnMoneyUpdated();
+        }
     }
+
+    private void CheckUltraPower()
+    {
+        if (Managers.Battle.haveUltraPower)
+            _UltraDamageLabel.SetActive(true);
+
+        else if (Managers.Battle.UseUltraPower)
+        {
+            _UltraDamageLabel.SetActive(false);
+            _UltraDamageLabel2.SetActive(true);
+        }
+        else
+        {
+            _UltraDamageLabel.SetActive(false);
+            _UltraDamageLabel2.SetActive(false);
+        }
+        
+    }
+
+    private IEnumerator CheckMinShield()
+    {
+        _isWarningActive = true;
+
+        while (Managers.Player.Shield < 100 && Managers.Player.Shield > 0)
+        {
+            _DangerMinShield.SetActive(true);
+            yield return new WaitForSeconds(1f);
+            _DangerMinShield.SetActive(false);
+            yield return new WaitForSeconds(1f);
+
+        }
+
+        _isWarningActive = false;
+
+    }
+
 
     private void OnLevelComplete()
     {
@@ -121,8 +166,6 @@ public class UIController : MonoBehaviour
         _allCoinsCollected.SetActive(false);
 
         _UltraDamageLabel.SetActive(true);
-
-        
     }
 
     private void OnAmmoUpdated()
@@ -175,15 +218,16 @@ public class UIController : MonoBehaviour
 
     private IEnumerator OnLevelFailedCor()
     {
+        Managers.Audio.StopMusic();
+        yield return new WaitForSeconds(3f);
+        Managers.Audio.levelFailedSource.Play();
+
         _BackGroundHUD1.SetActive(false);
-
         _mainCam.SetActive(false);
+
         _skyCam.SetActive(true);
-
         _levelFailedLabel.SetActive(true);
-        hurt.PlayAudioDefeat();
         yield return new WaitForSeconds(5f);
-
         
         Managers.Player.Respawn(); // просто задаёт щит и т.д.
         Managers.Mission.RestartCurrent();

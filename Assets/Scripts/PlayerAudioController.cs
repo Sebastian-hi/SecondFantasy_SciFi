@@ -24,6 +24,11 @@ public class PlayerAudioController : MonoBehaviour
 
     private void Update()
     {
+        JetpackAndGravity();
+    }
+
+    private void JetpackAndGravity()
+    {
         if (_playerMovement.jetpackActivated)
         {
             if (!_isPlayingJetpack)
@@ -58,12 +63,10 @@ public class PlayerAudioController : MonoBehaviour
                 StopFootSteps();
             }
         }
-        else 
+        else
         {
             StopFootSteps();
         }
-           
-        
     }
 
     private void StartFootSteps(float delay)
