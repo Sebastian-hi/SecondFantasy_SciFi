@@ -1,5 +1,7 @@
 using Cinemachine;
 using System.Collections;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using Unity.Burst.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -12,6 +14,7 @@ public class PlayerShoot : MonoBehaviour
 
     [SerializeField] private AudioSource _playerShootSource;
     [SerializeField] private AudioClip[] _playerShootClip;
+    [SerializeField] private AudioClip  _ultraDamageShoot;
     [SerializeField] private AudioSource _playerReloading;
     [SerializeField] private Transform _cameraTransform;
     [SerializeField] private CinemachineFreeLook _cinemachineFreeLook;
@@ -29,12 +32,16 @@ public class PlayerShoot : MonoBehaviour
 
     private bool _isReloading = false;
 
+    private Coroutine fovCoroutine = null;
+
     private GameObject _hitObject;
 
     private int _damage = 50;
     private int _heatshotDamage = 100;
     private int _ultraDamage = 200;
 
+    private float _normalSpeedXCam = 300f;
+    private float _whenPlayerAim = 150f;
 
     private void Start()
     {
@@ -42,17 +49,6 @@ public class PlayerShoot : MonoBehaviour
         _playerMovement = GetComponent<PlayerMovement>();
         _cam = Camera.main;
     }
-
-    private void OnGUI()
-    {
-        int size = 14;
-        float posX = _cam.pixelWidth / 2 - size / 4;
-        float posY = _cam.pixelHeight / 2 - size / 1.5f;
-
-        GUI.Label(new Rect(posX, posY, size, size), "o");
-    }
-
-
 
     private void Update()
     {
@@ -65,18 +61,17 @@ public class PlayerShoot : MonoBehaviour
                 transform.forward = Vector3.Lerp(transform.forward, lookDirectionPlayer, Time.deltaTime * 10f); // плавно поворачивает игрока к прицелу
             }
 
-            bool newAimingState = Input.GetMouseButton(1);
-
-
-            if (!_isReloading && _isAiming != newAimingState)
-            {
-                _isAiming = newAimingState;
-                _animator.SetBool("Aiming", _isAiming);
-                StartCoroutine(ChangeFOV(_isAiming ? 30f : 50f));
-
+            if (Input.GetMouseButtonDown(1) && !_isAiming)
+            {           
+                PlayerAiming(true);
             }
+            else if (Input.GetMouseButtonUp(1) && _isAiming) 
+            { 
+                PlayerAiming(false);
+            }
+            
 
-            if (Input.GetMouseButtonDown(0) && !_isShooting && !_isReloading)
+            if (Input.GetMouseButtonDown(0) && !_isShooting && !_isReloading && Managers.Player.CurAmmo > 0)
             {
                 StartCoroutine(PlayerStartShoot());
                 RayCastFire();
@@ -88,7 +83,7 @@ public class PlayerShoot : MonoBehaviour
                 StartCoroutine(PlayerReloading());
             }
 
-            if (Managers.Player.CurAmmo <= 0 && !_isReloading)
+            if (Managers.Player.CurAmmo <= 0 && !_isReloading && Managers.Player.MaxAmmo > 0)
             {
                 StartCoroutine(PlayerReloading());
             }
@@ -102,42 +97,106 @@ public class PlayerShoot : MonoBehaviour
         }
     }
 
+    private void PlayerAiming(bool aiming)
+    {
+        if (_isAiming == aiming) return;
+
+        _isAiming = aiming;
+
+        if (aiming)
+        {
+            _animator.SetTrigger("StartAim");
+        }
+        else
+        {
+            _animator.SetTrigger("StopAim");
+        }
+        
+        float camFOV = _isAiming ? 30f : 50f;
+        float speedXAxis = _isAiming ? _whenPlayerAim : _normalSpeedXCam;
+
+        if (fovCoroutine != null)
+        {
+            StopCoroutine(fovCoroutine);
+        }
+
+        fovCoroutine = StartCoroutine(SmoothFOVandSensChange(camFOV, speedXAxis));
+    }
+
+    private IEnumerator SmoothFOVandSensChange(float camFOV, float speedXAxis)
+    {
+        float startFOV = _cinemachineFreeLook.m_Lens.FieldOfView;
+        float startSens = _cinemachineFreeLook.m_XAxis.m_MaxSpeed;
+
+        float elapsedTime = 0f;
+        float duration = 0.3f; // врем€ дл€ плавн. измен.
+
+        while (elapsedTime < duration)
+        {
+            float lerpFOV = Mathf.Lerp(startFOV, camFOV, Mathf.SmoothStep(0f, 1f, elapsedTime / duration));
+            float lerpSpeed = Mathf.Lerp(startSens, speedXAxis, Mathf.SmoothStep(0f, 1f, elapsedTime / duration));
+
+            _cinemachineFreeLook.m_Lens.FieldOfView = lerpFOV;
+            _cinemachineFreeLook.m_XAxis.m_MaxSpeed = lerpSpeed;
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        _cinemachineFreeLook.m_Lens.FieldOfView = camFOV;
+        _cinemachineFreeLook.m_XAxis.m_MaxSpeed = speedXAxis;
+
+    }
+
     private IEnumerator PlayerStartShoot()
     {
         _isShooting = true; // блок. повторной стрельбы
-        _playerMovement.IsShooting = true; // блок движени€
+        _playerMovement.IsShootingOrReloading = true; // блок движени€
 
-        _animator.SetBool("Aiming", false);
-        yield return new WaitForEndOfFrame();
-
-
-        int playRandomShoot = Random.Range(0, _playerShootClip.Length);
         _animator.SetTrigger("ShootTrigger");
-        _playerShootSource.PlayOneShot(_playerShootClip[playRandomShoot]);
+
+        _isAiming = false;
+        if (fovCoroutine != null)
+        {
+            StopCoroutine(fovCoroutine);
+        }
+       
+        StartCoroutine(SmoothFOVandSensChange(50f, _normalSpeedXCam));
+
+        if (Managers.Battle.UseUltraPower)
+        {
+            _playerShootSource.PlayOneShot(_ultraDamageShoot);
+        }
+        else
+        {
+            int playRandomShoot = Random.Range(0, _playerShootClip.Length);
+            _playerShootSource.PlayOneShot(_playerShootClip[playRandomShoot]);
+        }
 
         Managers.Player.ChangeAmmo(-1);
-        
 
         yield return new WaitForSeconds(0.7f); // окончание анимации
-        _animator.SetBool("Aiming", _isAiming); //   ¬озвращаем прицеливание
-
-        yield return new WaitForSeconds(0.1f);
-
         _isShooting = false;
-        _playerMovement.IsShooting = false;
+        _playerMovement.IsShootingOrReloading = false;
     }
 
 
     private IEnumerator PlayerReloading()
     {
         _isReloading = true;
-        _playerMovement.IsShooting = true;
+        _playerMovement.IsShootingOrReloading = true;
+
+        _animator.SetBool("WalkFront", false);
+        _animator.SetBool("WalkLeft", false);
+        _animator.SetBool("WalkRight", false);
+        _animator.SetBool("WalkBack", false);
+        _animator.SetBool("Sprint", false);
 
         _playerReloading.Play();
-        _animator.SetBool("Aiming", false);
+
         _animator.SetBool("Reloading", true);
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.1f);
 
         int needAmmo = 5 - Managers.Player.CurAmmo;
         int ammoToLoad = Mathf.Min(needAmmo, Managers.Player.MaxAmmo);
@@ -145,9 +204,9 @@ public class PlayerShoot : MonoBehaviour
         
         _animator.SetBool("Reloading", false);
         _animator.SetBool("Aiming", _isAiming); // возвр. прицеливание
-
+        yield return new WaitForSeconds(1f);
         _isReloading = false;
-        _playerMovement.IsShooting = false;
+        _playerMovement.IsShootingOrReloading = false;
     }
 
     private void RayCastFire()
@@ -167,59 +226,13 @@ public class PlayerShoot : MonoBehaviour
             float distancefromCamera = Vector3.Distance(_cam.transform.position, hit.point);
             float distanceFromHero = Vector3.Distance(transform.position, hit.point);
 
-            if (distancefromCamera < distanceFromHero)
+            if (distancefromCamera < distanceFromHero) // загораживает
             {
-                Debug.Log(" амере что-то мешает");
-                int originalLayer = _hitObject.layer;
-                _hitObject.layer = LayerMask.NameToLayer("Ignore Raycast");
-
-                RaycastHit SecondHit;
-
-                if (Physics.Raycast(ray, out SecondHit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Collide))
-                {
-                    GameObject secondHitObject = SecondHit.collider.gameObject;
-
-                    Debug.Log("¬торой объект: " + secondHitObject);
-
-                    StartCoroutine(StartExplosion(SecondHit.point));
-
-                    IEnemyInterface Secondtarget = _hitObject.GetComponentInParent<IEnemyInterface>();
-
-                    if (Secondtarget != null)
-                    {
-                        Debug.Log("Hit enemy!"); // ќтладка, попали ли мы в врага
-
-                        if (_hitObject.CompareTag("Head") || _hitObject.name == "Head") // hitObject.name == headcollider";
-                        {
-                            Secondtarget.HurtEnemy(_heatshotDamage);
-                        }
-                        else
-                        {
-                            Secondtarget.HurtEnemy(_damage);
-                        }
-                    }
-                    _hitObject.layer = originalLayer;
-                }
+                CheckHitAgain(ray, layerMask);
             }
             else
             {
-                StartCoroutine(StartExplosion(hit.point));
-
-                IEnemyInterface target = _hitObject.GetComponentInParent<IEnemyInterface>();
-
-                if (target != null)
-                {
-                    Debug.Log("Hit enemy!"); // ќтладка, попали ли мы в врага
-
-                    if (_hitObject.CompareTag("Head") || _hitObject.name == "Head") // hitObject.name == headcollider";
-                    {
-                        target.HurtEnemy(_heatshotDamage);
-                    }
-                    else
-                    {
-                        target.HurtEnemy(_damage);
-                    }
-                }
+                ProcessDirectHit(hit.point, _hitObject);
             }
         }
         else
@@ -228,27 +241,55 @@ public class PlayerShoot : MonoBehaviour
             StartCoroutine(StartExplosion(ray.origin + ray.direction * 50)); // ¬зрыв в точке далеко от камеры
         }
     }
-        private IEnumerator StartExplosion(Vector3 position)
+
+    private void CheckHitAgain(Ray ray, int layerMask)
+    {
+        Debug.Log(" амере что-то мешает");
+        int originalLayer = _hitObject.layer;
+
+        try
+        {
+            _hitObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+            RaycastHit secondHit;
+
+            if (Physics.Raycast(ray, out secondHit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Collide))
+            {
+                GameObject secondHitObject = secondHit.collider.gameObject;
+
+                Debug.Log("¬торой объект: " + secondHitObject);
+
+                ProcessDirectHit(secondHit.point, secondHitObject);
+            }
+        }
+        finally
+        {
+            _hitObject.layer = originalLayer;
+        }
+
+    }
+
+    private void ProcessDirectHit(Vector3 hitPoint, GameObject _hitObject)
+    {
+        StartCoroutine(StartExplosion(hitPoint));
+
+        IEnemyInterface target = _hitObject.GetComponentInParent<IEnemyInterface>();
+
+        if (target != null)
+        {
+            Debug.Log("Hit enemy!"); // ќтладка, попали ли мы в врага
+
+            bool isHeadshot = _hitObject.CompareTag("Head");
+            int damage = isHeadshot ? _heatshotDamage : _damage;
+
+            target.HurtEnemy(damage);
+
+        }
+    }
+    private IEnumerator StartExplosion(Vector3 position)
     {
         GameObject explosion = Instantiate(_explosionShootPlayer, position, Quaternion.identity); // Quaternion.identity - без вращени€ (поворот 0 по всем ос€м)
         yield return new WaitForSeconds(1f);
         Destroy(explosion);
-    }
-
-    private IEnumerator ChangeFOV(float targetFOV)
-    {
-        float startFOV = _cinemachineFreeLook.m_Lens.FieldOfView;
-        float duration = 0.2f; // скорость изменени€ (врем€, за которое мы хотим завершить анимацию)
-        float elapsed = 0; // скок времени прошло (с 0 секунд до двух получаетс€)
-
-        while (elapsed < duration)
-        {
-            _cinemachineFreeLook.m_Lens.FieldOfView = Mathf.Lerp(startFOV, targetFOV, elapsed / duration);
-            elapsed += Time.deltaTime; // плавно увеличиваем
-            yield return null;
-        }
-
-        _cinemachineFreeLook.m_Lens.FieldOfView = targetFOV;
     }
 
     private IEnumerator StartUltraDamage()

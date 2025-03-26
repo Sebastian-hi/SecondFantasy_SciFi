@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 528830873633190207}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Weapon_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -42,7 +42,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2704523909729828854}
   - component: {fileID: 1873231367166258557}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: TeleportSource
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -58,7 +58,7 @@ Transform:
   m_GameObject: {fileID: 2251709081194327366}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.01, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -169,7 +169,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7844103183525551481}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: WeaponGrip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -202,7 +202,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4988181472353217388}
   - component: {fileID: 12956673618209600}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Weapon_Rifle_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -287,7 +287,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4627364299183098106}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: ShootFX
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -323,9 +323,9 @@ GameObject:
   - component: {fileID: 4433426345192163648}
   - component: {fileID: 2473423437123798703}
   - component: {fileID: 4982101414651844646}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Soldier
-  m_TagString: Untagged
+  m_TagString: Shootable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -405,11 +405,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fireSource: {fileID: 2742624830644274250}
-  fireClip: {fileID: 8300000, guid: 045e0bad18c542f4f827e5cd69fc42c8, type: 3}
+  fireClips:
+  - {fileID: 8300000, guid: 045e0bad18c542f4f827e5cd69fc42c8, type: 3}
+  - {fileID: 8300000, guid: 84eee13038febb24ab74ba24117927bf, type: 3}
+  - {fileID: 8300000, guid: 3b82e263509cfc749a06bc539cfd1b45, type: 3}
+  - {fileID: 8300000, guid: 37316a3e15a169d40a5ec8865e61b8ed, type: 3}
+  reloadedClips:
+  - {fileID: 8300000, guid: 455e37a6bf9063d47ad28ae49759d0dd, type: 3}
+  - {fileID: 8300000, guid: 4242812da248efa49a42b61b8e665990, type: 3}
   deathSource: {fileID: 2644908160171549766}
   deathClips:
   - {fileID: 8300000, guid: ded7db51cf648fa479e70f86132e7de1, type: 3}
   - {fileID: 8300000, guid: 0804b67199b476b4caff8ed859937b0d, type: 3}
+  - {fileID: 8300000, guid: 7c185af67075b8f46be7eb393192ba74, type: 3}
+  - {fileID: 8300000, guid: 030b71c09939c0a45b9ee04660fe79be, type: 3}
+  - {fileID: 8300000, guid: 47edc963ae0199241845513b81369385, type: 3}
   teleportSource: {fileID: 1873231367166258557}
   _ShootEffect: {fileID: 7031879540064377394}
 --- !u!54 &4982101414651844646
@@ -420,7 +430,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5974618441511636643}
   serializedVersion: 4
-  m_Mass: 120
+  m_Mass: 10
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -449,7 +459,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8537258052082684926}
   - component: {fileID: 477548244773126982}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: SK_Soldier_Torso
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -534,7 +544,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7562116305855063776}
   - component: {fileID: 2644908160171549766}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: DeathSource
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -574,7 +584,7 @@ AudioSource:
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 128
+  Priority: 120
   DopplerLevel: 1
   MinDistance: 10
   MaxDistance: 500
@@ -663,7 +673,7 @@ GameObject:
   - component: {fileID: 7169810246037760498}
   - component: {fileID: 1492139714100628669}
   - component: {fileID: 6839439667155487116}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Truba
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -939,7 +949,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.4
+      scalar: 0.6
       minScalar: 2
       maxCurve:
         serializedVersion: 2
@@ -5504,7 +5514,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1478773320215461977}
   - component: {fileID: 1307183564137232844}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Weapon_Rifle_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5559,7 +5569,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8825378982034882854}
   - component: {fileID: 6485645086249531932}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: SK_Soldier_Legs
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5643,7 +5653,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3742713661218797945}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: AudioSources
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5678,7 +5688,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4127314036718280893}
   - component: {fileID: 2742624830644274250}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: FireSource
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5807,7 +5817,7 @@ GameObject:
   - component: {fileID: 5298084748193843195}
   - component: {fileID: 7308570877421014611}
   - component: {fileID: 6316304665009739357}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Head
   m_TagString: Head
   m_Icon: {fileID: 0}

@@ -5,14 +5,17 @@ using UnityEngine;
 public class AudioManager : MonoBehaviour, IGameManager
 {
     public AudioSource playOneShotSource;
-    public AudioSource ambientSource;
     public AudioSource allMoneyCollected;
     public AudioSource levelFailedSource;
-
+    [Space]
     [Space]
     public AudioSource fight1MusicSource;
     public AudioSource fight2MusicSource;
     public AudioSource UltraPowerSource;
+    [Space]
+    [Space]
+    public AudioSource ambientSource;
+    [SerializeField] private AudioClip[] _ambientClips;
 
     public ManagerStatus status { get; private set; }
 
@@ -23,6 +26,12 @@ public class AudioManager : MonoBehaviour, IGameManager
         Debug.Log("AudioManager starting");
 
         status = ManagerStatus.Started;
+    }
+
+    public void PlayAmbientSound()
+    {
+        int randomAmbient = Random.Range(0, _ambientClips.Length);
+        ambientSource.PlayOneShot(_ambientClips[randomAmbient]);
     }
 
     public void PlaySound(AudioClip clip)

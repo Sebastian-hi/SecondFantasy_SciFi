@@ -7,6 +7,14 @@ public class TriggerBattle : MonoBehaviour
     [SerializeField] GameObject enemyPrefab;
 
     [SerializeField] Transform[] points;
+    [Space]
+    [Space]
+    [SerializeField] private bool _needBatteMusic;
+    [SerializeField] private float _secondsBattleMusic;
+
+    private float _fadeDuration = 1.5f; // было 2
+    private AudioSource _activeBattleSource;
+
 
     private bool _isStarted = false;
 
@@ -20,10 +28,9 @@ public class TriggerBattle : MonoBehaviour
             {
                 _isStarted = true;
 
-                if (!Managers.Battle.UseUltraPower)
+                if (!Managers.Battle.UseUltraPower && _needBatteMusic)
                 {
-                    Managers.Audio.StopMusic();
-                    Managers.Audio.PlayRandomFightMusic();
+                    StartCoroutine(PlayTriggerMusic());
                 }
                 
                 foreach (var point in points)
@@ -37,9 +44,60 @@ public class TriggerBattle : MonoBehaviour
     }
     private IEnumerator PlayTriggerMusic()
     {
-        Managers.Audio.StopMusic();
+        yield return StartCoroutine(FadeOut(Managers.Audio.ambientSource, _fadeDuration));
+
         Managers.Audio.PlayRandomFightMusic();
-        yield return new WaitForSeconds(67f);
-        Managers.Audio.ambientSource.Play();
+
+        _activeBattleSource = Managers.Audio.fight1MusicSource.isPlaying
+           ? Managers.Audio.fight1MusicSource
+           : Managers.Audio.fight2MusicSource;
+
+        yield return StartCoroutine(FadeIn(_activeBattleSource, _fadeDuration));
+
+        yield return new WaitForSeconds(_secondsBattleMusic); // пока закончится бой ждём
+
+        yield return StartCoroutine(FadeOut(_activeBattleSource, _fadeDuration));
+
+        Managers.Audio.PlayAmbientSound();
+
+        yield return StartCoroutine(FadeIn(Managers.Audio.ambientSource, _fadeDuration));
     }
+
+    private IEnumerator FadeOut(AudioSource audioSource, float duration)
+    {
+        if (audioSource == null || !audioSource.isPlaying)
+        {
+            yield break;
+        }
+
+        float startVolume = audioSource.volume;
+
+        for (float t=0; t < duration; t+= Time.deltaTime)
+        {
+            audioSource.volume = Mathf.Lerp(startVolume, 0, t / duration);
+            yield return null; // Чтобы не было моментально, а покадрово.
+        }
+
+        audioSource.volume = 0;
+        audioSource.Stop();
+    }
+
+    private IEnumerator FadeIn(AudioSource audioSource, float duration)
+    {
+        if (audioSource == null)
+            yield break;
+
+        float targetVolume = 1f;
+        audioSource.volume = 0;
+        audioSource.Play();
+
+        for (float t = 0; t < duration;t+= Time.deltaTime)
+        {
+            audioSource.volume = Mathf.Lerp(0, targetVolume, t / duration);
+            yield return null;
+        }
+        audioSource.volume = targetVolume;
+    }
+
+
 }

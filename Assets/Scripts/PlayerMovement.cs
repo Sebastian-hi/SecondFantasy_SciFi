@@ -16,7 +16,7 @@ public class PlayerMovement : MonoBehaviour
     private float _baseSpeed;
 
     private readonly float _sprintMult = 1.5f;
-    public bool IsShooting { get; set; } = false; // װכאד סענוכüבû
+    public bool IsShootingOrReloading { get; set; } = false; // װכאד סענוכüבû
 
     public float RotSpeed = 6.0f;
     private float _vertSpeed;
@@ -60,7 +60,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (!Managers.Player.PlayerIsDead)
         {
-            if (!IsShooting)
+            if (!IsShootingOrReloading)
             {
                 Movement();
                 AnimationMovement();

@@ -4,7 +4,8 @@ using UnityEngine;
 public class SoldierEnemy : MonoBehaviour, IEnemyInterface
 {
     [SerializeField] AudioSource fireSource;
-    [SerializeField] AudioClip fireClip;
+    [SerializeField] AudioClip[] fireClips;
+    [SerializeField] AudioClip[] reloadedClips;
     [Space]
     [SerializeField] AudioSource deathSource;
     [SerializeField] AudioClip[] deathClips;
@@ -22,14 +23,14 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
     private Animator _animator;
     private Rigidbody _rb;
 
-    private bool _isAlive = true;
+    private bool _isAlive;
     private bool _soldierAlreadyDead = false;
     private bool _alreadyAttacking = false;
 
     private float _speedMove = 2f;
     private float _obstacleRange = 2f;
 
-    private float _attackRange = 14; // радиус обнаружения.
+    private float _attackRange = 30; // радиус обнаружения.
     private float _attackCooldown = 2f; // время между выстрелами.
     private float _lastAttackTime;
 
@@ -38,6 +39,10 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
 
     private Vector3 _moveDirection;
     private Vector3 _lastPosition;
+
+    private Coroutine ShootCoroutine = null;
+    private Coroutine ReloadCoroutine = null;
+
 
     private void Awake()
     {
@@ -57,10 +62,8 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
     }
 
     private void Update()
-    {
-        if (!_isAlive || playerTransform == null) return;
-
-        if (!Managers.Player.PlayerIsDead)
+    { 
+        if (_isAlive || !Managers.Player.PlayerIsDead)
         {
             float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
 
@@ -77,12 +80,19 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
             {
                 _isChasingPlayer = false;
             }
+        }
 
-            if (Health <= 0 && !_soldierAlreadyDead)
+        if (!_isAlive)
+        {
+            if (ReloadCoroutine != null)
             {
-                _soldierAlreadyDead = true;
-                StartCoroutine(DeathSoldier());
+                StopCoroutine(FirstShoot());
             }
+            if (ReloadCoroutine != null)
+            {
+                StopCoroutine(SecondReload());
+            }
+
         }
     }
 
@@ -118,7 +128,6 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
 
         float moveSpeed = (transform.position - _lastPosition).magnitude / Time.fixedDeltaTime;
         _animator.SetFloat("EnemySpeed", Mathf.Clamp(moveSpeed, 0, 5f)); // Обновляем скорость
-        Debug.Log($"Wandering: Speed = {moveSpeed}");
 
         Vector3 rayOrigin = transform.position + Vector3.down * 0.5f;
 
@@ -185,7 +194,6 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
 
             float moveSpeed = (transform.position - _lastPosition).magnitude / Time.fixedDeltaTime;
             _animator.SetFloat("EnemySpeed", Mathf.Clamp(moveSpeed, 0, 5f));
-            Debug.Log($"ChasePlayer: Speed = {moveSpeed}, Position = {transform.position}, LastPosition = {_lastPosition}");
 
             Debug.Log("Преследуем в ChasePlayer()");
         }
@@ -244,7 +252,7 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
         Ray ray = new Ray(rayOrigin, directionToPlayer);
         RaycastHit hit;
 
-        int shootableLayer = LayerMask.GetMask("Shootable");
+        int shootableLayer = LayerMask.GetMask("Shootable", "Bortic", "Ignore Raycast");
 
         if (Physics.Raycast(ray, out hit, _attackRange, ~shootableLayer))
         {
@@ -264,39 +272,10 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
         return false;
     }
 
-   // БЫЛО
-    /*
-      private bool CanAttackPlayer()
-    {
-        Vector3 directionToPlayer = playerTransform.position - transform.position;
-        RaycastHit hit;
-
-        int shootableLayer = LayerMask.GetMask("Shootable");
-        float sphereRadius = 10f;
-
-        if (Physics.SphereCast(transform.position, sphereRadius, directionToPlayer.normalized, out hit, _attackRange , ~shootableLayer))
-        {
-            if (hit.collider.CompareTag("Player"))
-            {
-                Debug.Log("Игрок виден, атака возможна в ");
-                return true; // Игрок виден
-            }
-            else
-            {
-                if (hit.collider.CompareTag("Shootable"))
-                {
-                    Debug.Log("Путь заблокирован объектом: " + hit.collider.name);
-                }
-            }
-        }
-        return false;
-    }
-    */
-
-
     public void AttackHero()
     {
         LookAtPlayer();
+
         if (Time.time - _lastAttackTime >= _attackCooldown)
         {
             _lastAttackTime = Time.time;
@@ -307,40 +286,61 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
 
                 _animator.SetFloat("EnemySpeed", 0);
 
-                if (!_alreadyAttacking)
+                if (!_alreadyAttacking && _isAlive)
                 {
-                    StartCoroutine(StartShoot());
+                    StartShoot();
                 }
             }
             else
             {
                 Debug.Log("Враг не может атаковать (путь заблокирован)");
             }
-
         }
     }
 
-    private IEnumerator StartShoot()
+    private void StartShoot()
     {
         _alreadyAttacking = true;
+
+        ShootCoroutine = StartCoroutine(FirstShoot());
+    }
+
+    private IEnumerator FirstShoot()
+    {
         Debug.Log("Начинаю стрелять!");
 
         _animator.SetBool("Shoot", true);
         _ShootEffect.SetActive(true);
-        fireSource.PlayOneShot(fireClip);
-        Managers.Player.ChangeShield(_damageSoldier); // в нём уже есть Broadcast.
+
+        int randomShootSound = Random.Range(0, fireClips.Length);
+        fireSource.PlayOneShot(fireClips[randomShootSound]);
 
         yield return new WaitForSeconds(1f); // длительность анимации стрельбы
+        Managers.Player.ChangeShield(_damageSoldier); // в нём уже есть Broadcast.
+
         Debug.Log("Подождали анимацию стрельбы");
 
         _ShootEffect.SetActive(false);
+
         _animator.SetBool("Shoot", false);
+
+        yield return ReloadCoroutine = StartCoroutine(SecondReload());
+    }
+
+
+    private IEnumerator SecondReload()
+    {
         Debug.Log("Начинаю перезарядку");
+
         _animator.SetBool("Reloading", true);
-        yield return new WaitForSeconds(2f);
+        
+        int randomReloadSound = Random.Range(0, reloadedClips.Length);
+        fireSource.PlayOneShot(reloadedClips[randomReloadSound]);
+
+        yield return new WaitForSeconds(3f);
+      
         Debug.Log("Закончил перезарядку.");
         _animator.SetBool("Reloading", false);
-
         _alreadyAttacking = false;
     }
 
@@ -353,22 +353,10 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
         {
             _soldierAlreadyDead = true;
             _isAlive = false;
-            StartCoroutine(DeathSoldier());
+
+            PlayDeathSoldier();
+            Destroy(gameObject);
         }
-    }
-
-
-    private IEnumerator DeathSoldier()
-    {
-        _isAlive = false;
-
-        _animator.SetFloat("EnemySpeed", 0);
-        _animator.SetBool("isDead", true);
-        PlayDeathSoldier();
-
-        yield return new WaitForSeconds(4f);
-
-        Destroy(gameObject);  
     }
 
     private void PlayDeathSoldier()

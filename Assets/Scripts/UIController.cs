@@ -16,6 +16,7 @@ public class UIController : MonoBehaviour
     [SerializeField] private GameObject _allCoinsCollected;
     [SerializeField] private GameObject _UltraDamageLabel;
     [SerializeField] private GameObject _UltraDamageLabel2;
+    [SerializeField] private GameObject _AimPlayer;
     [Space]
     [Space]
     [SerializeField] private GameObject _mainCam;
@@ -73,6 +74,7 @@ public class UIController : MonoBehaviour
         _allCoinsCollected.SetActive(false);
         _levelFailedLabel.SetActive(false);
         _BackGroundHUD1.SetActive(true);
+        _AimPlayer.SetActive(true);
 
         OnShieldUpdated();
         OnMoneyUpdated();
@@ -147,6 +149,7 @@ public class UIController : MonoBehaviour
     private IEnumerator LevelCompleteCOR()
     {
         _BackGroundHUD1.SetActive(false);
+        _AimPlayer.SetActive(false);
         _mainCam.SetActive(false);
         _skyCam.SetActive(true);
         _levelCompleteLabel.SetActive(true);
@@ -174,7 +177,6 @@ public class UIController : MonoBehaviour
         {
             StartCoroutine(AmmoItemUI());
         }
-
         string messageAmmo = $"{Managers.Player.CurAmmo} / {Managers.Player.MaxAmmo}";
         _ammoText.text = messageAmmo;
     }
@@ -201,7 +203,7 @@ public class UIController : MonoBehaviour
     {
         _plusShield.SetActive(true);
         yield return new WaitForSeconds(3f);
-        Managers.Player.isAmmoItem = false;
+        Managers.Player.isShieldItem = false;
         _plusShield.SetActive(false);
     }
 
@@ -221,7 +223,7 @@ public class UIController : MonoBehaviour
         Managers.Audio.StopMusic();
         yield return new WaitForSeconds(3f);
         Managers.Audio.levelFailedSource.Play();
-
+        _AimPlayer.SetActive(false);
         _BackGroundHUD1.SetActive(false);
         _mainCam.SetActive(false);
 
@@ -236,7 +238,9 @@ public class UIController : MonoBehaviour
 
     private void OnGameComplete()
     {
+        _AimPlayer.SetActive(false);
         _GameComplete.SetActive(true);
+
         // возвращаем на главный экран.
     }
 }
