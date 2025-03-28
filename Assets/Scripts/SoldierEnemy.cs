@@ -94,6 +94,18 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
             }
 
         }
+
+        Ray rayGround = new(transform.position, Vector3.down);
+
+        if (!Physics.Raycast(rayGround, 1.1f, LayerMask.GetMask("Ground")))
+        {
+            _rb.AddForce(Vector3.down * 50f, ForceMode.Acceleration);
+
+            if (transform.position.y < -100)
+            {
+                Destroy(gameObject);
+            }
+        }
     }
 
     private void FixedUpdate()
@@ -382,7 +394,6 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
         Quaternion targetRotation = Quaternion.LookRotation(directionToPlayer);
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * _speedRotationLook); // скорость поворота
     }
-
 
     private void OnDrawGizmos()
     {

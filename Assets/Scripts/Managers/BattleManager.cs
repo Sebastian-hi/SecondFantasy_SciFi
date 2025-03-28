@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -7,8 +8,7 @@ public class BattleManager : MonoBehaviour, IGameManager
 {
     public ManagerStatus status { get; private set; }
 
-    public bool haveUltraPower = false;
-    public bool UseUltraPower = false;
+    [NonSerialized] public bool UseUltraPower = false;
 
     public void Startup()
     {

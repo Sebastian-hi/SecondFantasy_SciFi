@@ -14,7 +14,7 @@ public class MissionManager : MonoBehaviour, IGameManager
     {
         Debug.Log("MissionManager Starting");
 
-        UpdateData(1, 1); // 0 это главное меню (должно быть 0,1)
+        UpdateData(0, 1); // 0 это главное меню
         status = ManagerStatus.Started;
     }
 

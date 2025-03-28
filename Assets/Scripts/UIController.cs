@@ -99,6 +99,15 @@ public class UIController : MonoBehaviour
             _isWarningActive = false;
         }
 
+        if (Managers.Player.ECoin >= Managers.Player.PriceUltraDamage && !Managers.Battle.UseUltraPower)
+        {
+            _UltraDamageLabel.SetActive(true);
+        }
+        else
+        {
+            _UltraDamageLabel.SetActive(false);
+        }
+
         if (Managers.Battle.UseUltraPower)
         {
             OnMoneyUpdated();
@@ -107,14 +116,16 @@ public class UIController : MonoBehaviour
 
     private void CheckUltraPower()
     {
-        if (Managers.Battle.haveUltraPower)
-            _UltraDamageLabel.SetActive(true);
-
-        else if (Managers.Battle.UseUltraPower)
+        if (Managers.Battle.UseUltraPower)
         {
             _UltraDamageLabel.SetActive(false);
             _UltraDamageLabel2.SetActive(true);
         }
+        else if (Managers.Player.ECoin >= Managers.Player.PriceUltraDamage)
+        {
+            _UltraDamageLabel.SetActive(true);
+            _UltraDamageLabel2.SetActive(false);
+        } 
         else
         {
             _UltraDamageLabel.SetActive(false);
@@ -167,16 +178,15 @@ public class UIController : MonoBehaviour
         _allCoinsCollected.SetActive(true);
         yield return new WaitForSeconds(5f);
         _allCoinsCollected.SetActive(false);
-
-        _UltraDamageLabel.SetActive(true);
     }
 
     private void OnAmmoUpdated()
     {
-        if (Managers.Player.isAmmoItem)
+        if (Managers.Player.IsAmmoItem)
         {
             StartCoroutine(AmmoItemUI());
         }
+
         string messageAmmo = $"{Managers.Player.CurAmmo} / {Managers.Player.MaxAmmo}";
         _ammoText.text = messageAmmo;
     }
@@ -185,13 +195,13 @@ public class UIController : MonoBehaviour
     {
         _plusAmmo.SetActive(true);
         yield return new WaitForSeconds(2f);
-        Managers.Player.isAmmoItem = false;
+        Managers.Player.IsAmmoItem = false;
         _plusAmmo.SetActive(false);
     }
 
     private void OnShieldUpdated()
     {
-        if (Managers.Player.isShieldItem)
+        if (Managers.Player.IsShieldItem)
         {
             StartCoroutine(ShieldItemUI());
         }
@@ -203,13 +213,21 @@ public class UIController : MonoBehaviour
     {
         _plusShield.SetActive(true);
         yield return new WaitForSeconds(3f);
-        Managers.Player.isShieldItem = false;
+        Managers.Player.IsShieldItem = false;
         _plusShield.SetActive(false);
     }
 
     private void OnMoneyUpdated()
     {
-        string moneyMessage = $"{Managers.Player.ECoin} / {Managers.Player.MaxECoin} $";
+        int AvailableUltraPower = Managers.Player.ECoin / Managers.Player.PriceUltraDamage;
+
+        string moneyMessage = $"{Managers.Player.ECoin} / {Managers.Player.PriceUltraDamage} $";
+
+        if (Managers.Player.ECoin >= Managers.Player.PriceUltraDamage)
+        {
+            moneyMessage += $" ({AvailableUltraPower})";
+        }
+
         _moneyText.text = moneyMessage;
     }
 

@@ -12,7 +12,7 @@ public class TriggerBattle : MonoBehaviour
     [SerializeField] private bool _needBatteMusic;
     [SerializeField] private float _secondsBattleMusic;
 
-    private float _fadeDuration = 1.5f; // было 2
+    private float _fadeDuration = 1.2f; // было 2
     private AudioSource _activeBattleSource;
 
 
@@ -44,7 +44,7 @@ public class TriggerBattle : MonoBehaviour
     }
     private IEnumerator PlayTriggerMusic()
     {
-        yield return StartCoroutine(FadeOut(Managers.Audio.ambientSource, _fadeDuration));
+        yield return StartCoroutine(Managers.Audio.FadeOut(Managers.Audio.ambientSource, _fadeDuration));
 
         Managers.Audio.PlayRandomFightMusic();
 
@@ -52,51 +52,15 @@ public class TriggerBattle : MonoBehaviour
            ? Managers.Audio.fight1MusicSource
            : Managers.Audio.fight2MusicSource;
 
-        yield return StartCoroutine(FadeIn(_activeBattleSource, _fadeDuration));
+        yield return StartCoroutine(Managers.Audio.FadeIn(_activeBattleSource, _fadeDuration));
 
         yield return new WaitForSeconds(_secondsBattleMusic); // пока закончится бой ждём
 
-        yield return StartCoroutine(FadeOut(_activeBattleSource, _fadeDuration));
+        yield return StartCoroutine(Managers.Audio.FadeOut(_activeBattleSource, _fadeDuration));
 
         Managers.Audio.PlayAmbientSound();
 
-        yield return StartCoroutine(FadeIn(Managers.Audio.ambientSource, _fadeDuration));
-    }
-
-    private IEnumerator FadeOut(AudioSource audioSource, float duration)
-    {
-        if (audioSource == null || !audioSource.isPlaying)
-        {
-            yield break;
-        }
-
-        float startVolume = audioSource.volume;
-
-        for (float t=0; t < duration; t+= Time.deltaTime)
-        {
-            audioSource.volume = Mathf.Lerp(startVolume, 0, t / duration);
-            yield return null; // Чтобы не было моментально, а покадрово.
-        }
-
-        audioSource.volume = 0;
-        audioSource.Stop();
-    }
-
-    private IEnumerator FadeIn(AudioSource audioSource, float duration)
-    {
-        if (audioSource == null)
-            yield break;
-
-        float targetVolume = 1f;
-        audioSource.volume = 0;
-        audioSource.Play();
-
-        for (float t = 0; t < duration;t+= Time.deltaTime)
-        {
-            audioSource.volume = Mathf.Lerp(0, targetVolume, t / duration);
-            yield return null;
-        }
-        audioSource.volume = targetVolume;
+        yield return StartCoroutine(Managers.Audio.FadeIn(Managers.Audio.ambientSource, _fadeDuration));
     }
 
 

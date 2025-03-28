@@ -1,26 +1,42 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
 public class TerminalGo : MonoBehaviour
 {
+    [SerializeField] GameObject[] _objectToDestroy;
+    [SerializeField] GameObject[] _effectsTeleport;
     [SerializeField] AudioClip _clipForSend;
-    [SerializeField] GameObject[] _objectsToDestroy;
-    
-    private float _fallSpeed = 15f;
-    private float _destroyHeight = -100f;
+    [SerializeField] GameObject _createObject;
 
     private bool _playerInRange = false;
+    private bool _alreadyStarted = false;
 
-    private Vector3 _startPos;
+    private void Start()
+    {
+        _createObject.SetActive(false);
+
+        foreach (GameObject effect in _effectsTeleport)
+        {
+            effect.SetActive(false);
+        }
+    }
 
     private void Update()
     {
-        if (_playerInRange && Input.GetKeyDown(KeyCode.E))
+        if (_playerInRange && Input.GetKeyDown(KeyCode.E) && !_alreadyStarted)
         {
+            _alreadyStarted = true;
             Managers.Audio.PlaySound(_clipForSend);
-            StartCoroutine(SendObjectsInSpace());
+
+            StartCoroutine(SendToSpaceObjects());
+
+            if (_createObject != null)
+            {
+                _createObject.SetActive(true);
+            }
         }
     }
 
@@ -40,43 +56,18 @@ public class TerminalGo : MonoBehaviour
         }
     }
 
-    private IEnumerator SendObjectsInSpace()
+    private IEnumerator SendToSpaceObjects()
     {
-
-        foreach (GameObject obj in _objectsToDestroy)
+        foreach (GameObject effect in _effectsTeleport)
         {
-            if (obj == null) continue;
-            
-            yield return new WaitForSeconds(1f);  // временное
-            Destroy(obj);                         // решение (остальное было)
+            effect.SetActive(true);
+        }
 
+        yield return new WaitForSeconds(0.2f);
 
-            /*
-            SpaceFlyThings flyScript = obj.GetComponent<SpaceFlyThings>();
-
-            if (flyScript != null)
-            {
-                flyScript.enabled = false;
-            }
-
-            GameObject temp = Instantiate(obj, obj.transform.position, obj.transform.rotation);
-            temp.name = obj.name;
-            temp.transform.parent = obj.transform.parent;
-            Destroy(obj);
-
-            while (temp != null && temp.transform.position.y > _destroyHeight)
-            {
-                temp.transform.position += Vector3.down * _fallSpeed * Time.deltaTime;
-                yield return null;
-            }
-
-            if (temp != null)
-            {
-                Destroy(temp);
-            }
-
-            */
+        foreach (GameObject objects in _objectToDestroy)
+        {
+            Destroy(objects);
         }
     }
-
 }

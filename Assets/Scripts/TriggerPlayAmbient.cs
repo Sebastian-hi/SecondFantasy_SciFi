@@ -11,5 +11,4 @@ public class TriggerPlayAmbient : MonoBehaviour
             Managers.Audio.PlayAmbientSound();
         }
     }
-
 }

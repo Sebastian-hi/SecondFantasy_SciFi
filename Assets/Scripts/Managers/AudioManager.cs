@@ -51,7 +51,7 @@ public class AudioManager : MonoBehaviour, IGameManager
         set { AudioListener.pause = value; }
     }
 
-    public float musicVolume
+    public float MusicVolume
     {
         get
         {
@@ -69,7 +69,7 @@ public class AudioManager : MonoBehaviour, IGameManager
         }
     }
     
-    public bool musicMute
+    public bool MusicMute
     {
         get
         {
@@ -113,5 +113,50 @@ public class AudioManager : MonoBehaviour, IGameManager
             fight1MusicSource.Play();
         
         else fight2MusicSource.Play();
+    }
+
+
+    public IEnumerator FadeOut(AudioSource audioSource, float duration)
+    {
+        if (audioSource == null || !audioSource.isPlaying)
+        {
+            yield break;
+        }
+
+        float startVolume = audioSource.volume;
+
+        for (float t = 0; t < duration; t += Time.deltaTime)
+        {
+            audioSource.volume = Mathf.Lerp(startVolume, 0, t / duration);
+            yield return null; // „тобы не было моментально, а покадрово.
+        }
+
+        audioSource.volume = 0;
+        audioSource.Stop();
+    }
+
+    public IEnumerator FadeIn(AudioSource audioSource, float duration)
+    {
+        if (audioSource == null)
+            yield break;
+
+        float targetVolume = 1f;
+        audioSource.volume = 0;
+        audioSource.Play();
+
+        for (float t = 0; t < duration; t += Time.deltaTime)
+        {
+            audioSource.volume = Mathf.Lerp(0, targetVolume, t / duration);
+            yield return null;
+        }
+        audioSource.volume = targetVolume;
+    }
+
+    public IEnumerator PlayAllCoinsCollected()
+    {
+        Managers.Audio.StopMusic();
+        Managers.Audio.allMoneyCollected.Play();
+        yield return new WaitForSeconds(Managers.Audio.allMoneyCollected.clip.length);
+        Managers.Audio.ambientSource.Play();
     }
 }

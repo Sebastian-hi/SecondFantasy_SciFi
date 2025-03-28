@@ -89,9 +89,9 @@ public class PlayerShoot : MonoBehaviour
             }
 
 
-            if (Managers.Battle.haveUltraPower && Input.GetKey(KeyCode.Q))
+            if (Managers.Player.ECoin >= Managers.Player.PriceUltraDamage && Input.GetKey(KeyCode.Q) && !Managers.Battle.UseUltraPower)
             {
-                Managers.Player.UseUltraDamageMinCoin();
+                Managers.Player.UseUltraDamageMinCoin(); // просто счёт денег
                 StartCoroutine(StartUltraDamage());
             }
         }
@@ -198,7 +198,7 @@ public class PlayerShoot : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f);
 
-        int needAmmo = 5 - Managers.Player.CurAmmo;
+        int needAmmo = Managers.Player.AmmoInRifleMagazine - Managers.Player.CurAmmo;
         int ammoToLoad = Mathf.Min(needAmmo, Managers.Player.MaxAmmo);
         Managers.Player.ChangeAmmo(ammoToLoad);
         
@@ -295,11 +295,12 @@ public class PlayerShoot : MonoBehaviour
     private IEnumerator StartUltraDamage()
     {
         Debug.Log("Супер сила началась");
-        Managers.Battle.haveUltraPower = false;
+
         Managers.Battle.UseUltraPower = true;
 
         Managers.Audio.StopMusic();
-        Managers.Audio.UltraPowerSource.Play();
+
+        StartCoroutine(Managers.Audio.FadeIn(Managers.Audio.UltraPowerSource, 1.5f));
 
         _damage = _ultraDamage;
         _heatshotDamage = _ultraDamage;
@@ -308,15 +309,23 @@ public class PlayerShoot : MonoBehaviour
         Managers.Player.ChangeShield(100);
 
         yield return new WaitForSeconds(15f);
-        Managers.Audio.UltraPowerSource.Stop();
+
+        StartCoroutine(Managers.Audio.FadeOut(Managers.Audio.UltraPowerSource, 2f));
+
         Managers.Battle.UseUltraPower = false;
+
         _damage = 50;
         _heatshotDamage = 100;
         _animator.speed = 1;
         _playerMovement.MoveSpeed -= 3f;
 
-        yield return new WaitForSeconds(2f);
-        Managers.Audio.ambientSource.Play();
+        if (Managers.Player.ECoin < Managers.Player.NextThreshold - Managers.Player.PriceUltraDamage)
+        {
+            Managers.Player.NextThreshold = Mathf.Max(Managers.Player.PriceUltraDamage, 
+            (Managers.Player.ECoin / Managers.Player.PriceUltraDamage + 1) * Managers.Player.PriceUltraDamage);
+        }
+
+        Managers.Audio.PlayAmbientSound();
 
         Debug.Log("Супер сила закончилась");
 

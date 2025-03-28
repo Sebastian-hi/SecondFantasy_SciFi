@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting.Antlr3.Runtime;
@@ -13,19 +14,23 @@ public class PlayerManager : MonoBehaviour, IGameManager
 
     public int ECoin { get; private set; }
 
-    public int MaxECoin { get; private set; }
+    public int PriceUltraDamage { get; private set; } = 12;
 
-    public int CurAmmo { get; private set; }   // может быть не больше 4/5.
+    public int NextThreshold { get; set; } = 12;
 
-    public int MaxAmmo { get; private set; }        // в начале 20
+    public int CurAmmo { get; private set; }
 
-    public bool isShieldItem { get;  set; }
+    public int MaxAmmo { get; private set; }
 
-    public bool isAmmoItem { get;  set; }
+    public int AmmoInRifleMagazine { get; private set; } = 7;
 
-    public Transform playerTransform;
+    public bool IsShieldItem { get;  set; }
 
-    public bool PlayerIsDead = false;
+    public bool IsAmmoItem { get;  set; }
+
+    [NonSerialized] public Transform playerTransform;
+
+    [NonSerialized] public bool PlayerIsDead = false;
 
     public void Startup()
     {
@@ -40,15 +45,15 @@ public class PlayerManager : MonoBehaviour, IGameManager
 
     public void Respawn()
     {
-        UpdateData(200, 350, 0, 15, 5, 20);
+        UpdateData(200, 350, 0, 12, 7, 20);
     }
 
-    public void UpdateData(int Shield, int MaxShield, int ECoin, int MaxECoin, int CurAmmo, int MaxAmmo)
+    public void UpdateData(int Shield, int MaxShield, int ECoin, int PriceUltraDamage, int CurAmmo, int MaxAmmo)
     {
         this.Shield = Shield;
         this.MaxShield = MaxShield;
         this.ECoin = ECoin;
-        this.MaxECoin = MaxECoin;
+        this.PriceUltraDamage = PriceUltraDamage;
         this.CurAmmo = CurAmmo;
         this.MaxAmmo = MaxAmmo;
     }
@@ -57,14 +62,15 @@ public class PlayerManager : MonoBehaviour, IGameManager
     {
         ECoin += value;
 
-        if (ECoin > MaxECoin)
-        {
-            ECoin = MaxECoin;
-        }
-        if (ECoin == MaxECoin)
+        while (ECoin >= NextThreshold)
         {
             Messenger.Broadcast(GameEvent.ALL_MONEY_COLLECTED);
+
+            StartCoroutine(Managers.Audio.PlayAllCoinsCollected());
+
+            NextThreshold += PriceUltraDamage;
         }
+
         Messenger.Broadcast(GameEvent.MONEY_UPDATED);
     }
     
@@ -98,13 +104,14 @@ public class PlayerManager : MonoBehaviour, IGameManager
         if (value < 0) // value с минусом при стрельбе, с плюсом при перезарядке
         {
             CurAmmo += value;
+
             if (CurAmmo < 0)
                 CurAmmo = 0;
         }
         else
         {
             int ammoToLoad = Mathf.Min(value, MaxAmmo);
-            CurAmmo = Mathf.Min(CurAmmo + ammoToLoad, 5);
+            CurAmmo = Mathf.Min(CurAmmo + ammoToLoad, AmmoInRifleMagazine);
             MaxAmmo -= ammoToLoad;
         }
 
@@ -113,7 +120,6 @@ public class PlayerManager : MonoBehaviour, IGameManager
             MaxAmmo = 0;
         }
 
-        
         Messenger.Broadcast(GameEvent.AMMO_UPDATED);
     }
 
@@ -125,6 +131,15 @@ public class PlayerManager : MonoBehaviour, IGameManager
 
     public void UseUltraDamageMinCoin()
     {
-        ECoin = 0;
+        ECoin -= PriceUltraDamage;
+
+        if (ECoin < NextThreshold - PriceUltraDamage)
+        {
+            NextThreshold = Mathf.Max(PriceUltraDamage, (ECoin / PriceUltraDamage + 1) * PriceUltraDamage); 
+                                                // если ECOIN = 15, а Price 12, то 15/12 = 1.
+                                                // Далее + 1 = 2.
+                                                // и *12 = 24.
+                                                // Max(12/24) = 24. Это следующий порог!
+        }
     }
 }
