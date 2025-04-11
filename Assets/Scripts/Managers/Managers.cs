@@ -1,13 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using UnityEditor.PackageManager;
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerManager))]
 [RequireComponent(typeof(AudioManager))]
 [RequireComponent(typeof(BattleManager))]
 [RequireComponent(typeof(MissionManager))]
+[RequireComponent(typeof(LocalizationManager))]
+
 public class Managers : MonoBehaviour
 {
     public static PlayerManager Player { get; private set; }
@@ -15,6 +15,7 @@ public class Managers : MonoBehaviour
     public static AudioManager Audio { get; private set; }
     public static BattleManager Battle { get; private set; }
     public static MissionManager Mission { get; private set; }
+    public static LocalizationManager Localization { get; private set; }
 
     private List<IGameManager> startSequence; // only кто наследует интерфейс
 
@@ -29,13 +30,15 @@ public class Managers : MonoBehaviour
         Audio = GetComponent<AudioManager>();
         Battle = GetComponent<BattleManager>();
         Mission = GetComponent<MissionManager>();
+        Localization = GetComponent<LocalizationManager>();
 
         startSequence = new List<IGameManager>
         {
             Player,
             Audio,
             Battle,
-            Mission
+            Mission,
+            Localization
         };
 
         StartCoroutine(StartManagers());
@@ -76,5 +79,3 @@ public class Managers : MonoBehaviour
         Debug.Log("All managers started up");
     }
 }
-
-

@@ -18,6 +18,7 @@ public class Finish : MonoBehaviour
 
     private void PlayFinish()
     {
+        Managers.Mission.LevelComplete = true;
         Managers.Audio.StopMusic();
         _finishSource.Play();
 

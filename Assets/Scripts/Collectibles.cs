@@ -46,5 +46,4 @@ public class Collectibles : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
 }

@@ -21,7 +21,6 @@ public class PlayerShoot : MonoBehaviour
 
     [SerializeField] private GameObject _explosionShootPlayer;
 
-
     private PlayerMovement _playerMovement;
 
     private Camera _cam;
@@ -40,19 +39,27 @@ public class PlayerShoot : MonoBehaviour
     private int _heatshotDamage = 100;
     private int _ultraDamage = 200;
 
-    private float _normalSpeedXCam = 300f;
-    private float _whenPlayerAim = 150f;
+    public float NormalSpeedXCam = 300f;
+    public float WhenPlayerAimSpeedX = 150f;
 
     private void Start()
     {
         _animator = GetComponent<Animator>();
         _playerMovement = GetComponent<PlayerMovement>();
         _cam = Camera.main;
+
     }
 
     private void Update()
     {
-        if (!Managers.Player.PlayerIsDead)
+        if (Managers.Player.InMenu || Managers.Player.PlayerIsDead)
+        {
+            _cinemachineFreeLook.m_XAxis.m_MaxSpeed = 0f;
+            _cinemachineFreeLook.m_YAxis.m_MaxSpeed = 0f;
+            return; 
+        }
+
+        if (!Managers.Mission.LevelComplete)
         {
             if (_cameraTransform != null)
             {
@@ -62,14 +69,14 @@ public class PlayerShoot : MonoBehaviour
             }
 
             if (Input.GetMouseButtonDown(1) && !_isAiming)
-            {           
+            {
                 PlayerAiming(true);
             }
-            else if (Input.GetMouseButtonUp(1) && _isAiming) 
-            { 
+            else if (Input.GetMouseButtonUp(1) && _isAiming)
+            {
                 PlayerAiming(false);
             }
-            
+
 
             if (Input.GetMouseButtonDown(0) && !_isShooting && !_isReloading && Managers.Player.CurAmmo > 0)
             {
@@ -94,8 +101,19 @@ public class PlayerShoot : MonoBehaviour
                 Managers.Player.UseUltraDamageMinCoin(); // просто счёт денег
                 StartCoroutine(StartUltraDamage());
             }
+        }   
+    }
+
+    public float MouseSensitivity
+    {
+        get { return NormalSpeedXCam / 300f; }
+        set
+        {
+            NormalSpeedXCam = 300f * value;
+            WhenPlayerAimSpeedX = 150f * value;
         }
     }
+
 
     private void PlayerAiming(bool aiming)
     {
@@ -113,7 +131,7 @@ public class PlayerShoot : MonoBehaviour
         }
         
         float camFOV = _isAiming ? 30f : 50f;
-        float speedXAxis = _isAiming ? _whenPlayerAim : _normalSpeedXCam;
+        float speedXAxis = _isAiming ? WhenPlayerAimSpeedX : NormalSpeedXCam;
 
         if (fovCoroutine != null)
         {
@@ -161,7 +179,7 @@ public class PlayerShoot : MonoBehaviour
             StopCoroutine(fovCoroutine);
         }
        
-        StartCoroutine(SmoothFOVandSensChange(50f, _normalSpeedXCam));
+        StartCoroutine(SmoothFOVandSensChange(50f, NormalSpeedXCam));
 
         if (Managers.Battle.UseUltraPower)
         {

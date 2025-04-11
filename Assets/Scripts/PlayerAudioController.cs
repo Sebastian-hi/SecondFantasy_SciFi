@@ -1,9 +1,5 @@
 using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
-using UnityEditor.SceneTemplate;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 public class PlayerAudioController : MonoBehaviour
 {
@@ -45,7 +41,7 @@ public class PlayerAudioController : MonoBehaviour
             _isPlayingJetpack = false;
         }
 
-        if (characterController.isGrounded)
+        if (characterController.isGrounded && !Managers.Player.InMenu)
         {
             float playerSpeed = characterController.velocity.magnitude;
 

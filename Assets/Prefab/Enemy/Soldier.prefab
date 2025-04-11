@@ -413,6 +413,7 @@ MonoBehaviour:
   reloadedClips:
   - {fileID: 8300000, guid: 455e37a6bf9063d47ad28ae49759d0dd, type: 3}
   - {fileID: 8300000, guid: 4242812da248efa49a42b61b8e665990, type: 3}
+  - {fileID: 8300000, guid: 39042d054f80f694fa5d29fa4e45fd73, type: 3}
   deathSource: {fileID: 2644908160171549766}
   deathClips:
   - {fileID: 8300000, guid: ded7db51cf648fa479e70f86132e7de1, type: 3}

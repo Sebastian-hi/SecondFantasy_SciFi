@@ -151,23 +151,6 @@ public class UIController : MonoBehaviour
 
     }
 
-
-    private void OnLevelComplete()
-    {
-        StartCoroutine(LevelCompleteCOR());
-    }
-
-    private IEnumerator LevelCompleteCOR()
-    {
-        _BackGroundHUD1.SetActive(false);
-        _AimPlayer.SetActive(false);
-        _mainCam.SetActive(false);
-        _skyCam.SetActive(true);
-        _levelCompleteLabel.SetActive(true);
-        yield return new WaitForSeconds(4f);
-        Managers.Mission.GoToNextLevel();
-    }
-
     private void OnAllMoneyCollected()
     {
         StartCoroutine(AllCoinsCollected());
@@ -240,25 +223,51 @@ public class UIController : MonoBehaviour
     {
         Managers.Audio.StopMusic();
         yield return new WaitForSeconds(3f);
+        Managers.Audio.StopMusic(); // вдруг в момент произойдёт
+
         Managers.Audio.levelFailedSource.Play();
+        _mainCam.SetActive(false);
+        _skyCam.SetActive(true);
         _AimPlayer.SetActive(false);
         _BackGroundHUD1.SetActive(false);
-        _mainCam.SetActive(false);
 
-        _skyCam.SetActive(true);
         _levelFailedLabel.SetActive(true);
         yield return new WaitForSeconds(5f);
         
         Managers.Player.Respawn(); // просто задаёт щит и т.д.
+        Managers.Audio.StopMusic();
+        Managers.Audio.PlayAmbientSound();
         Managers.Mission.RestartCurrent();
         
     }
 
+    private void OnLevelComplete()
+    {
+        StartCoroutine(LevelCompleteCOR());
+    }
+
+    private IEnumerator LevelCompleteCOR()
+    {
+        _BackGroundHUD1.SetActive(false);
+        _AimPlayer.SetActive(false);
+        _mainCam.SetActive(false);
+        _skyCam.SetActive(true);
+        _levelCompleteLabel.SetActive(true);
+        yield return new WaitForSeconds(3f);
+        Managers.Mission.GoToNextLevel();
+    }
     private void OnGameComplete()
     {
-        _AimPlayer.SetActive(false);
-        _GameComplete.SetActive(true);
+        StartCoroutine(OnGameCompleteCOR());
+    }
 
-        // возвращаем на главный экран.
+
+    private IEnumerator OnGameCompleteCOR()
+    {
+        _GameComplete.SetActive(true);
+        yield return new WaitForSeconds(8f);
+        SceneManager.LoadScene("StartMenu");
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 }

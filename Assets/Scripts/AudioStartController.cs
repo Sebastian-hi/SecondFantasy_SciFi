@@ -11,7 +11,7 @@ public class AudioStartController : MonoBehaviour
 
     private IEnumerator StartAmbient()
     {
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(1f);
         Managers.Audio.PlayAmbientSound();
     }
 }

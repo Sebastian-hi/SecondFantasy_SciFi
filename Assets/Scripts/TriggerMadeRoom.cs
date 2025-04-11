@@ -6,14 +6,15 @@ public class TriggerMadeRoom : MonoBehaviour
 {
     [SerializeField] GameObject _madeRoom;
     [SerializeField] GameObject _destroyRoom;
+    [SerializeField] GameObject _finishObject;
 
-    private void Awake()
+    private void Start()
     {
-        _madeRoom.SetActive(false);
+        _finishObject.SetActive(false);
 
-        if (_destroyRoom != null)
+        if (_madeRoom != null)
         {
-            _destroyRoom.SetActive(true);
+            _madeRoom.SetActive(false);
         }
     }
 
@@ -23,8 +24,10 @@ public class TriggerMadeRoom : MonoBehaviour
 
         if (player != null)
         {
-            _madeRoom.SetActive(true);
-
+            if (_madeRoom != null)
+            {
+                _madeRoom.SetActive(true);
+            }
             if (_destroyRoom != null)
             {
                 _destroyRoom.SetActive(false);

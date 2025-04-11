@@ -152,11 +152,5 @@ public class AudioManager : MonoBehaviour, IGameManager
         audioSource.volume = targetVolume;
     }
 
-    public IEnumerator PlayAllCoinsCollected()
-    {
-        Managers.Audio.StopMusic();
-        Managers.Audio.allMoneyCollected.Play();
-        yield return new WaitForSeconds(Managers.Audio.allMoneyCollected.clip.length);
-        Managers.Audio.ambientSource.Play();
-    }
+    
 }

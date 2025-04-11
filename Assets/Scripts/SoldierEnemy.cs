@@ -14,7 +14,6 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
     [SerializeField] GameObject _ShootEffect;
 
     private float _speedRotationLook = 5f;
-
     public int Health { get; set; } = 100;
 
     private int _damageSoldier = -15;
@@ -57,13 +56,20 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
         playerTransform = Managers.Player.playerTransform;
         _ShootEffect.SetActive(false);
         teleportSource.Play();
-
         ChooseNewDirection();
     }
 
     private void Update()
     { 
-        if (_isAlive || !Managers.Player.PlayerIsDead)
+        if (playerTransform == null) // если нет ищем дальше. 
+        {
+            playerTransform = Managers.Player.playerTransform;
+
+            if (playerTransform == null) return;
+        }
+
+
+        if (_isAlive && !Managers.Player.PlayerIsDead && !Managers.Mission.LevelComplete)
         {
             float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
 
@@ -82,7 +88,7 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
             }
         }
 
-        if (!_isAlive)
+        if (!_isAlive || Managers.Mission.LevelComplete)
         {
             if (ReloadCoroutine != null)
             {
@@ -99,9 +105,9 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
 
         if (!Physics.Raycast(rayGround, 1.1f, LayerMask.GetMask("Ground")))
         {
-            _rb.AddForce(Vector3.down * 50f, ForceMode.Acceleration);
+            _rb.AddForce(Vector3.down * 150f, ForceMode.Acceleration);
 
-            if (transform.position.y < -100)
+            if (transform.position.y < -50)
             {
                 Destroy(gameObject);
             }
@@ -110,7 +116,7 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
 
     private void FixedUpdate()
     {
-        if (!Managers.Player.PlayerIsDead)
+        if (!Managers.Player.PlayerIsDead && !Managers.Mission.LevelComplete)
         {
             if (_isAlive)
             {
@@ -399,5 +405,10 @@ public class SoldierEnemy : MonoBehaviour, IEnemyInterface
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, _attackRange);
+    }
+
+    public void SetPlayerTransform(Transform newTransform)
+    {
+        playerTransform = newTransform;
     }
 }

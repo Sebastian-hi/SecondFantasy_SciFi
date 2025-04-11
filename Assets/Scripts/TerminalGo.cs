@@ -16,7 +16,10 @@ public class TerminalGo : MonoBehaviour
 
     private void Start()
     {
-        _createObject.SetActive(false);
+        if (_createObject != null)
+        {
+            _createObject.SetActive(false);
+        }
 
         foreach (GameObject effect in _effectsTeleport)
         {

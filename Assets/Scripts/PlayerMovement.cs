@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.IO.LowLevel.Unsafe;
+using UnityEditor;
 using UnityEngine;
 
 
@@ -35,9 +36,6 @@ public class PlayerMovement : MonoBehaviour
 
     private void Awake()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
         _baseSpeed = MoveSpeed;
     }
 
@@ -45,10 +43,22 @@ public class PlayerMovement : MonoBehaviour
     {
         _charController = GetComponent<CharacterController>();
         _animator = GetComponent<Animator>();
+
+        Managers.Player.FindPlayer();
     }
 
     private void Update()
     {
+        if (Managers.Player.InMenu)
+        {
+            _animator.SetBool("InMenu", true);
+        }
+        else
+        {
+            _animator.SetBool("InMenu", false);
+        }
+
+
         if (Managers.Player.Shield == 0 && !_playerAlreadyDead)
         {
             _animator.SetBool("DeadPlayer", true);
@@ -58,24 +68,26 @@ public class PlayerMovement : MonoBehaviour
             StartCoroutine(DisableAnimator());
         }
 
-        if (!Managers.Player.PlayerIsDead)
-        {
-            if (!IsShootingOrReloading)
+        
+            if (!Managers.Player.InMenu && !Managers.Player.PlayerIsDead)
             {
-                Movement();
-                AnimationMovement();
+                if (!IsShootingOrReloading)
+                {
+                    Movement();
+                    AnimationMovement();
+                }
+                if (Input.GetKey(KeyCode.Space) && !jetpackActivated)
+                {
+                    StartCoroutine(StartJetpack());
+                }
+                if (Input.GetKeyUp(KeyCode.Space))
+                {
+                    StopCoroutine(StartJetpack());
+                    _isUsingJetpack = false;
+                    jetpackActivated = false;
+                }
             }
-            if (Input.GetKey(KeyCode.Space) && !jetpackActivated)
-            {
-                StartCoroutine(StartJetpack());
-            }
-            if (Input.GetKeyUp(KeyCode.Space))
-            {
-                StopCoroutine(StartJetpack());
-                _isUsingJetpack = false;
-                jetpackActivated = false;
-            }
-        }
+        
     }
 
     private void Movement()

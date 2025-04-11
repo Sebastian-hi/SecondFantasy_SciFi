@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class TriggerBattle : MonoBehaviour
@@ -15,8 +14,15 @@ public class TriggerBattle : MonoBehaviour
     private float _fadeDuration = 1.2f; // было 2
     private AudioSource _activeBattleSource;
 
-
     private bool _isStarted = false;
+
+    private void Update()
+    {
+        if (Managers.Player.PlayerIsDead)
+        {
+            StopCoroutine(PlayTriggerMusic());
+        }
+    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -32,13 +38,15 @@ public class TriggerBattle : MonoBehaviour
                 {
                     StartCoroutine(PlayTriggerMusic());
                 }
-                
+
                 foreach (var point in points)
                 {
                     GameObject enemy = Instantiate(enemyPrefab, point.position, point.rotation);
 
                     SoldierEnemy soldier = enemy.GetComponent<SoldierEnemy>();
-                }  
+
+                    soldier.SetPlayerTransform(Managers.Player.playerTransform);
+                }
             }
         }
     }
@@ -62,6 +70,4 @@ public class TriggerBattle : MonoBehaviour
 
         yield return StartCoroutine(Managers.Audio.FadeIn(Managers.Audio.ambientSource, _fadeDuration));
     }
-
-
 }

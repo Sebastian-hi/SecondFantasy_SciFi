@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ced66e91fed562b4391ac2e03f0471a4, type: 3}
+  m_Name: LocalizationData_en
+  m_EditorClassIdentifier: 
+  language: en
+  entries:
+  - key: 'Start Game:'
+    value: 'Start Game:'
+  - key: 'Settings:'
+    value: 'Settings:'
+  - key: 'All Sound:'
+    value: 'All Sound:'
+  - key: 'Only Music:'
+    value: 'Only Music:'
+  - key: 'Exit:'
+    value: 'Exit:'
+  - key: '- I did it!   I was able to connect to one of these "Metal Raiders".'
+    value: '- I did it!   I was able to connect to one of these "Metal Raiders".'
+  - key: The systems seem to be fully operational.
+    value: The systems seem to be fully operational.
+  - key: '- The Corporation will soon disappear beyond the event horizon, so we have
+      2 tasks.'
+    value: '- The Corporation will soon disappear beyond the event horizon, so we
+      have 2 tasks.'
+  - key: The first is to unhook their stations. We are ready to receive them on the
+      side.
+    value: The first is to unhook their stations. We are ready to receive them on
+      the side.
+  - key: To do this, use the virus on terminals with this special sign.
+    value: To do this, use the virus on terminals with this special sign.
+  - key: The second task is to disable the shield generator so that we can loot the
+      entire sector.
+    value: The second task is to disable the shield generator so that we can loot
+      the entire sector.
+  - key: Like some kind of brutal Vikings.
+    value: Like some kind of brutal Vikings.
+  - key: Get to the controls quickly, we'll get rich.
+    value: Get to the controls quickly, we'll get rich.
+  - key: '! Danger !'
+    value: '! Danger !'
+  - key: Holding down the space bar will activate the jetpack. Enjoy.
+    value: Holding down the space bar will activate the jetpack. Enjoy.
+  - key: 'Mouse Sensitivity:'
+    value: 'Mouse Sensitivity:'
+  - key: Back to the menu?
+    value: Back to the menu?
+  - key: YOU DIED
+    value: YOU DIED
+  - key: The mission failed
+    value: The mission failed
+  - key: Great, you did a great job.
+    value: Great, you did a great job.
+  - key: You have completed the game.
+    value: You have completed the game.
+  - key: Use the Q button in battle.
+    value: Use the Q button in battle.
+  - key: Q - Military technology
+    value: Q - Military technology
+  - key: Ultra Damage and Speed!!!
+    value: Ultra Damage and Speed!!!
+  - key: '! Danger !'
+    value: '! Danger !'
+  - key: To speed up, press Shift.
+    value: To speed up, press Shift.
+  - key: The menu opens by pressing the i button.
+    value: The menu opens by pressing the i button.
+  - key: 'Just in case: recharge to R.'
+    value: 'Just in case: recharge to R.'
+  - key: To send all this to your gang, press the E button on the terminal.
+    value: To send all this to your gang, press the E button on the terminal.
+  - key: We have downloaded a military program for you, it will work in a short time.
+    value: We have downloaded a military program for you, it will work in a short
+      time.
+  - key: That's enough for our gang for a long time.
+    value: That's enough for our gang for a long time.
+  - key: It was exciting, wasn't it?
+    value: It was exciting, wasn't it?
+  - key: Thank you for your attention to my project.
+    value: Thank you for your attention to my project.

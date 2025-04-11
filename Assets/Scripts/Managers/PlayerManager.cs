@@ -32,13 +32,15 @@ public class PlayerManager : MonoBehaviour, IGameManager
 
     [NonSerialized] public bool PlayerIsDead = false;
 
+    public bool InMenu { get; set; } = false;
+
     public void Startup()
     {
         Debug.Log("Player manager starting");
 
         Respawn();
 
-        playerTransform = GameObject.FindWithTag("Player").transform;
+        FindPlayer();
 
         status = ManagerStatus.Started;
     }
@@ -66,7 +68,7 @@ public class PlayerManager : MonoBehaviour, IGameManager
         {
             Messenger.Broadcast(GameEvent.ALL_MONEY_COLLECTED);
 
-            StartCoroutine(Managers.Audio.PlayAllCoinsCollected());
+            Managers.Audio.allMoneyCollected.Play();
 
             NextThreshold += PriceUltraDamage;
         }
@@ -140,6 +142,16 @@ public class PlayerManager : MonoBehaviour, IGameManager
                                                 // Далее + 1 = 2.
                                                 // и *12 = 24.
                                                 // Max(12/24) = 24. Это следующий порог!
+        }
+    }
+
+    public void FindPlayer()
+    {
+        playerTransform = GameObject.FindWithTag("Player").transform;
+       
+        if (playerTransform == null)
+        {
+            Debug.LogWarning("Игрок не найден!");
         }
     }
 }

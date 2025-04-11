@@ -6,9 +6,10 @@ using UnityEngine.SceneManagement;
 public class MissionManager : MonoBehaviour, IGameManager
 {
     public int CurLevel { get; private set; }
-
     public int MaxLevel { get; private set; }
     public ManagerStatus status { get; private set; }
+
+    public bool LevelComplete { get; set; } = false;
 
     public void Startup()
     {
@@ -32,6 +33,8 @@ public class MissionManager : MonoBehaviour, IGameManager
             string name = $"Level{CurLevel}";
             Debug.Log($"Loading: {name}");
             SceneManager.LoadScene(name);
+
+            StartCoroutine(GoToNextAndFindPlayer());
         }
         else
         {
@@ -50,5 +53,15 @@ public class MissionManager : MonoBehaviour, IGameManager
         string name = $"level{CurLevel}";
         Debug.Log($"Loading: {name}");
         SceneManager.LoadScene(name);
+        Managers.Player.PlayerIsDead = false;
+    }
+
+    public IEnumerator GoToNextAndFindPlayer()
+    {
+        string name = $"Level{CurLevel}";
+        yield return SceneManager.LoadSceneAsync(name);
+        yield return new WaitForSeconds(0.5f);
+
+        Managers.Player.FindPlayer();
     }
 }
